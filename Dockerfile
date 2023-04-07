@@ -1,7 +1,7 @@
 ARG BASE_IMAGE=arm64v8/adoptopenjdk:11-jdk-hotspot
 FROM $BASE_IMAGE
 
-ARG BITBUCKET_VERSION=7.15.1
+ARG BITBUCKET_VERSION=8.8.2
 ARG PLATFORM=arm64
 
 ENV RUN_USER                                        bitbucket
@@ -35,8 +35,13 @@ ARG TINI_VERSION=v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${PLATFORM} /sbin/tini
 RUN chmod +x /sbin/tini
 
+RUN mkdir -p /var/agent
+ENV JAVA_OPTS="-javaagent:/var/agent/atlassian-agent.jar ${JAVA_OPTS}"
+
+
 ARG DOWNLOAD_URL=https://product-downloads.atlassian.com/software/stash/downloads/atlassian-bitbucket-${BITBUCKET_VERSION}.tar.gz
 
+ADD agent.jar /var/agent/atlassian-agent.jar
 RUN groupadd --gid ${RUN_GID} ${RUN_GROUP} \
     && useradd --uid ${RUN_UID} --gid ${RUN_GID} --home-dir ${BITBUCKET_HOME} --shell /bin/bash ${RUN_USER} \
     && echo PATH=$PATH > /etc/environment \
